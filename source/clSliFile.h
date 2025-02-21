@@ -65,6 +65,10 @@ class clSliFile : public abstractSliceFile
 		/// <summary>reset</summary>
 		void reset();
 
+
+		// Newly added
+		void writeToTxt(const std::string& filename);
+
 	private:
 		struct tyFileHead
 		{

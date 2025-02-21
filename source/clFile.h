@@ -46,7 +46,8 @@ class clFile
 
 	public:
 		//clFile();
-		clFile::clFile(const char * FilePath = NULL, const char * FileName = NULL);
+		//clFile::clFile(const char * FilePath = NULL, const char * FileName = NULL);			// Original
+		clFile(const char * FilePath = NULL, const char * FileName = NULL);
 		~clFile();
 
 

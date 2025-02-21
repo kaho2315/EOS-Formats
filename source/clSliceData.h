@@ -129,6 +129,15 @@ class clSliceData
 		static int fillEdgePolyROI(int * DataDest, int width, int height, int min_x, int min_y, int max_x, int max_y, int color);
 		static int addEdgeflag(int  * DataDest, int width, int height, int x1, int y1, int x2, int y2, int color);
 		static int drawLine(int  * DataDest, int width, int height, int x1, int y1, int x2, int y2, int color);
+
+
+		// Newly Added
+		int getPolylineCount(int partIndex);                           // Get number of polylines
+		float* getPolylinePoints(int partIndex, int polylineIndex);    // Get points for a polyline
+		int getPolylinePointCount(int partIndex, int polylineIndex);   // Get number of points for a polyline
+
+		int getHatchCount(int partIndex);                             // Get number of hatches
+		float* getHatchPoints(int partIndex, int hatchIndex);         // Get start and end points for a hatch
 };
 
 

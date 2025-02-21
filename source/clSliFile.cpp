@@ -1,5 +1,9 @@
 #include "clSliFile.h"
 
+// Newly added
+#include <fstream>
+using namespace std;
+
 //- Math macros -//
 #define ABS(a) (((a)>=0)?(a):(-(a)))
 #define MIN(a,b) (((a)<(b))?(a):(b))
@@ -310,6 +314,8 @@ bool clSliFile::readSliceData(clSliceData * sliceData, int PartIndex, int LayerI
 		//- command
 		OType = m_file.readIntBE(1);
 
+		printf("Opcode detected: %d at offset %d\n", OType, m_file.getOffset());
+
 		switch (OType)
 		{
 			case 1:
@@ -380,49 +386,71 @@ bool clSliFile::readSliceData(clSliceData * sliceData, int PartIndex, int LayerI
 				}
 
 				break;
-			case 4:
-				//- support
-				//m_error.addWarning("Support is not supported!");
+			// case 4:
+			// 	//- support
+			// 	//m_error.addWarning("Support is not supported!");
 
-				//Command : start hatches
-				//Syntax : $$HATCHES/id,n,p1sx,p1sy,p1ex,p1ey,...pnex,pney
-				//Parameters:
-				//
-				//	id		: INTEGER
-				//	n		: INTEGER
-				//	p1sx..pney	: REAL
-				//
-				//id : identifier to allow more than one model information in one file.
-				//id refers to the parameter id of command $$LABEL (HEADER-section).
-				//n : number of hatches (n*4 =number of coordinates)
-				//p1sx..pney : coordinates of the hatches 1..n
-				//4 parameters for every hatch (startx,starty,endx,endy) 
+			// 	//Command : start hatches
+			// 	//Syntax : $$HATCHES/id,n,p1sx,p1sy,p1ex,p1ey,...pnex,pney
+			// 	//Parameters:
+			// 	//
+			// 	//	id		: INTEGER
+			// 	//	n		: INTEGER
+			// 	//	p1sx..pney	: REAL
+			// 	//
+			// 	//id : identifier to allow more than one model information in one file.
+			// 	//id refers to the parameter id of command $$LABEL (HEADER-section).
+			// 	//n : number of hatches (n*4 =number of coordinates)
+			// 	//p1sx..pney : coordinates of the hatches 1..n
+			// 	//4 parameters for every hatch (startx,starty,endx,endy) 
 
-				//- padding
-				if (m_file.readIntBE(1) != 0)
-				{
-					m_error.AddError("unknown Byte @ %i " + m_file.getOffset() - 1);
+			// 	//- padding
+			// 	if (m_file.readIntBE(1) != 0)
+			// 	{
+			// 		m_error.AddError("unknown Byte @ %i " + m_file.getOffset() - 1);
+			// 		return false;
+			// 	}
+
+			// 	n = m_file.readIntBE(2);
+
+			// 	if (n > 0)
+			// 	{
+			// 		float * points = sliceData->createHatch(storeAsPartIndex, n);
+
+			// 		//- read file
+			// 		m_file.readFilePart(m_file.getOffset(), n * 4 * 4 + 32);
+
+			// 		//- read points - every Hatch has 4 points
+			// 		for (int i = n * 4; i > 0; i--)
+			// 		{
+			// 			*points = (float)m_file.readIntBE(2);
+			// 			points++;
+			// 		}
+
+			// 	}
+
+			// 	break;
+			case 4: // Hatches
+				printf("Entered hatch case!\n");
+
+				if (m_file.readIntBE(1) != 0) {
+					m_error.AddError("Unknown byte during hatch parsing @ %i", m_file.getOffset() - 1);
 					return false;
 				}
 
 				n = m_file.readIntBE(2);
-
-				if (n > 0)
-				{
+				if (n > 0) {
 					float * points = sliceData->createHatch(storeAsPartIndex, n);
-
-					//- read file
 					m_file.readFilePart(m_file.getOffset(), n * 4 * 4 + 32);
 
-					//- read points - every Hatch has 4 points
-					for (int i = n * 4; i > 0; i--)
-					{
+					for (int i = n * 4; i > 0; i--) {
 						*points = (float)m_file.readIntBE(2);
 						points++;
 					}
 
+					// ✅ Add Debug Information
+					printf("Hatch Read: %d hatches detected on layer %d\n", n, LayerIndex);
 				}
-
 				break;
 
 			default:
@@ -453,3 +481,79 @@ int clSliFile::strIndexOfLast(const char * src, char findChar, int maxScanCount)
 	}
 	return pos;
 }
+
+
+
+
+//------------------------------------------------------------//  Newly Added
+void clSliFile::writeToTxt(const std::string& filename) {
+    std::ofstream outFile(filename);
+    if (!outFile.is_open()) {
+        std::cerr << "Failed to open file for writing.\n";
+        return;
+    }
+
+    outFile << "SLI File Details:\n";
+    outFile << "Number of Layers: " << m_FileHead.LayerCount << std::endl;
+    outFile << "Scale Factor: " << m_FileHead.scaleFactor << std::endl;
+    outFile << "------------------------------------------" << std::endl;
+
+    for (int i = 0; i < m_FileHead.LayerCount; ++i) {
+        outFile << "Layer " << i << " | " << " Height from Base (mm): " << m_IndexTable[i].layerPos << std::endl;
+
+        clSliceData sliceData;
+        if (readSliceData(&sliceData, 0, i)) {
+            int polylineCount = sliceData.getPolylineCount(0);
+            int hatchCount = sliceData.getHatchCount(0);
+
+            // Write polylines
+            outFile << "  # of Polylines in current layer: " << polylineCount << "\n";
+            for (int p = 0; p < polylineCount; p++) {
+                float* polylinePoints = sliceData.getPolylinePoints(0, p);
+                int pointCount = sliceData.getPolylinePointCount(0, p);
+
+                outFile << "    Polyline " << p+1 << ": ";
+                for (int j = 0; j < pointCount * 2; j += 2) {
+                    outFile << "(" << polylinePoints[j] << ", " << polylinePoints[j + 1] << ") ";
+                }
+                outFile << "\n";
+            }
+
+            // Write hatches
+            outFile << "  # of Hatches in current layer: " << hatchCount << "\n";
+            for (int h = 0; h < hatchCount; h++) {
+                float* hatchPoints = sliceData.getHatchPoints(0, h);
+                outFile << "    Hatch " << h << ": Start("
+                        << hatchPoints[0] << ", " << hatchPoints[1] << ") "
+                        << "End(" << hatchPoints[2] << ", " << hatchPoints[3] << ")\n";
+            }
+        }
+        outFile << "------------------------------------------\n";
+    }
+
+    outFile.close();
+}
+
+
+
+// void clSliFile::writeToTxt(const std::string& filename) {
+//     std::ofstream outFile(filename);
+//     if (!outFile.is_open()) {
+//         std::cerr << "Failed to open file for writing.\n";
+//         return;
+//     }
+
+//     outFile << "SLI File Details:" << endl;
+//     outFile << "Number of Layers: " << m_FileHead.LayerCount << std::endl;
+//     outFile << "Scale Factor: " << m_FileHead.scaleFactor << std::endl;
+//     outFile << "------------------------------------------" << std::endl;
+
+//     // Assuming we have some way to access polyline and hatch data. Adjust as per actual implementation.
+//     // This is a placeholder to show how you might format the output.
+//     for (int i = 0; i < m_FileHead.LayerCount; ++i) {
+//         outFile << "Layer " << i << " Position: " << m_IndexTable[i].layerPos << std::endl;
+//         // If you have specific functions to get polyline/hatch data per layer, call them here.
+//     }
+
+//     outFile.close();
+// }

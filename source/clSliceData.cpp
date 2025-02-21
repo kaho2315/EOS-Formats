@@ -557,7 +557,7 @@ int clSliceData::fillEdgePoly(int * DataDest, int width, int height, int color)
 
 	int * outP = DataDest;
 
-	//- m_sliceMask füllem
+	//- m_sliceMask fï¿½llem
 	for (int y = height; y > 0; y--)
 	{
 		state = false;
@@ -579,13 +579,13 @@ int clSliceData::fillEdgePolyROI(int * DataDest, int width, int height, int min_
 {
 	if (DataDest == 0) return -1;
 
-	//- Fläche füllen
+	//- Flï¿½che fï¿½llen
 	int x_pos = min_x;
 	bool state = false;
 
 	int * outP = DataDest;
 
-	//- m_sliceMask füllem
+	//- m_sliceMask fï¿½llem
 	for (int y = min_y; y < max_y; y++)
 	{
 		state = false;
@@ -601,3 +601,81 @@ int clSliceData::fillEdgePolyROI(int * DataDest, int width, int height, int min_
 
 	return 1;
 }
+
+
+
+//------------------------------------------------ Newly Added
+
+int clSliceData::getPolylineCount(int partIndex) {
+    if ((partIndex < 0) || (partIndex >= m_partCount)) return 0;
+
+    int polylineCount = 0;
+    for (int i = 0; i < m_parts[partIndex].objectCount; i++) {
+        if (!m_parts[partIndex].objects[i].isHatch) {
+            polylineCount++;
+        }
+    }
+    return polylineCount;
+}
+
+
+float* clSliceData::getPolylinePoints(int partIndex, int polylineIndex) {
+    if ((partIndex < 0) || (partIndex >= m_partCount)) return nullptr;
+
+    int count = 0;
+    for (int i = 0; i < m_parts[partIndex].objectCount; i++) {
+        if (!m_parts[partIndex].objects[i].isHatch) {
+            if (count == polylineIndex) {
+                return m_parts[partIndex].objects[i].points;
+            }
+            count++;
+        }
+    }
+    return nullptr;
+}
+
+
+int clSliceData::getPolylinePointCount(int partIndex, int polylineIndex) {
+    if ((partIndex < 0) || (partIndex >= m_partCount)) return 0;
+
+    int count = 0;
+    for (int i = 0; i < m_parts[partIndex].objectCount; i++) {
+        if (!m_parts[partIndex].objects[i].isHatch) {
+            if (count == polylineIndex) {
+                return m_parts[partIndex].objects[i].pointCount;
+            }
+            count++;
+        }
+    }
+    return 0;
+}
+
+
+int clSliceData::getHatchCount(int partIndex) {
+    if ((partIndex < 0) || (partIndex >= m_partCount)) return 0;
+
+    int hatchCount = 0;
+    for (int i = 0; i < m_parts[partIndex].objectCount; i++) {
+        if (m_parts[partIndex].objects[i].isHatch) {
+            hatchCount++;
+        }
+    }
+    return hatchCount;
+}
+
+
+float* clSliceData::getHatchPoints(int partIndex, int hatchIndex) {
+    if ((partIndex < 0) || (partIndex >= m_partCount)) return nullptr;
+
+    int count = 0;
+    for (int i = 0; i < m_parts[partIndex].objectCount; i++) {
+        if (m_parts[partIndex].objects[i].isHatch) {
+            if (count == hatchIndex) {
+                return m_parts[partIndex].objects[i].points;
+            }
+            count++;
+        }
+    }
+    return nullptr;
+}
+

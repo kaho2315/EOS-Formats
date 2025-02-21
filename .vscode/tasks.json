@@ -1,0 +1,36 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++.exe build active file",
+            "command": "C:/msys64/ucrt64/bin/g++.exe",
+			"args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "${workspaceFolder}/source/clSliFile.cpp",
+				"${workspaceFolder}/source/clFile.cpp",
+				"${workspaceFolder}/source/clError.cpp",
+				"${workspaceFolder}/source/clSliceData.cpp",
+                "${workspaceFolder}/source/mainTest.cpp",
+                "-o",
+                "${workspaceFolder}/bin/EOS-Formats.exe",
+                //"-I${workspaceFolder}/source" // Include directory for header files
+            ],
+            "options": {
+                "cwd": "C:/msys64/ucrt64/bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "compiler: C:/msys64/ucrt64/bin/g++.exe"
+        }
+    ]
+}
+
+
+

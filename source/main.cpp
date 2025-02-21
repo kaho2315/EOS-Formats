@@ -15,7 +15,7 @@ int main(int argc, char* argv [])
 	}
 	else
 	{
-		sliFile.readFromFile("D:\\Entwicklung\\VC\\ThermoBoxEmgu\\_test_files_\\ScanV_Micro.Job");
+		sliFile.readFromFile("C:\\Users\\kaho2\\EOS-Formats\\examples\\box_job.job");
 	}
 
 
